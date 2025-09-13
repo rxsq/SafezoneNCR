@@ -1,27 +1,13 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
+const express = require("express");
 const router = express.Router();
+const { EmployeePosition } = require("../db/models");
 
-// GET route for fetching positions
-router.get('/', (req, res) => {
-    const positionsFilePath = path.join(__dirname, '../public/assets/data/positions.json');
-    
-    fs.readFile(positionsFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading positions file:', err);
-            return res.status(500).json({ message: 'Error reading positions data.' });
-        }
-        
-        try {
-            const positions = JSON.parse(data);
-            res.json(positions);
-        } catch (parseError) {
-            console.error('Error parsing positions data:', parseError);
-            return res.status(500).json({ message: 'Error parsing positions data.' });
-        }
-    });
+router.get("/", async (_req, res) => {
+  try {
+    res.json(await EmployeePosition.findAll());
+  } catch {
+    res.status(500).json({ message: "Error reading positions data." });
+  }
 });
 
 module.exports = router;

@@ -1,114 +1,78 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+const express = require("express");
 const router = express.Router();
+const { NcrEngineerForm } = require("../db/models");
+const { requireRole } = require("../utils/authz");
 
-// Path to the JSON file
-const filename = path.join(__dirname, '../public/assets/data/ncr_engineer_form.json');
-
-// Read JSON file utility function
-const readJsonFile = (file) => {
-    const data = fs.readFileSync(file, 'utf8');
-    return JSON.parse(data);
-};
-
-// Write JSON file utility function
-const writeJsonFile = (file, data) => {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
-};
-
-// GET all Engineering forms
-router.get('/', (req, res) => {
-    try {
-        const data = readJsonFile(filename);
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to read JSON file' });
-    }
+router.get("/", async (_req, res) => {
+  try {
+    res.json(await NcrEngineerForm.findAll());
+  } catch {
+    res.status(500).json({ status: "error", message: "DB error" });
+  }
 });
 
-// GET an Engineering form by engFormID
-router.get('/:engFormID', (req, res) => {
-    const engFormID = req.params.engFormID;
-
-    try {
-        const existingData = readJsonFile(filename);
-        const form = existingData.find(item => item.engFormID === parseInt(engFormID));
-
-        if (!form) {
-            return res.status(404).json({ status: 'error', message: 'Engineering form not found' });
-        }
-
-        res.json(form);
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to read JSON file' });
-    }
+router.get("/:engFormID", async (req, res) => {
+  const id = Number(req.params.engFormID);
+  const row = await NcrEngineerForm.findByPk(id);
+  if (!row)
+    return res
+      .status(404)
+      .json({ status: "error", message: "Engineering form not found" });
+  res.json(row);
 });
 
-// POST a new Engineering form
-router.post('/', (req, res) => {
-    const newEngineerForm = req.body;
-
-    fs.readFile(filename, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ message: 'Error reading data file' });
-
-        let engineerForms = JSON.parse(data);
-
-        const nextEngFormID = engineerForms.length > 0 ? Math.max(...engineerForms.map(form => form.engFormID)) + 1 : 1;
-        
-        newEngineerForm.engFormID = nextEngFormID;
-
-        engineerForms.push(newEngineerForm);
-
-        fs.writeFile(filename, JSON.stringify(engineerForms, null, 2), (err) => {
-            if (err) return res.status(500).json({ message: 'Error writing to data file' });
-
-            res.status(201).json({
-                engFormID: newEngineerForm.engFormID, 
-                message: 'Engineering form created successfully'
-            });
-        });
+router.post(
+  "/",
+  requireRole(["Engineer", "Administrator", "Supervisor"]),
+  async (req, res) => {
+    const last = await NcrEngineerForm.findOne({
+      order: [["engFormID", "DESC"]],
     });
-});
+    const nextId = last ? last.engFormID + 1 : 1;
+    await NcrEngineerForm.create({ ...req.body, engFormID: nextId });
+    res
+      .status(201)
+      .json({
+        engFormID: nextId,
+        message: "Engineering form created successfully",
+      });
+  }
+);
 
-// PUT (Update) an Engineering form by engFormID
-router.put('/:engFormID', (req, res) => {
-    const engFormID = req.params.engFormID;
-    const updatedData = req.body;
+router.put(
+  "/:engFormID",
+  requireRole(["Engineer", "Administrator", "Supervisor"]),
+  async (req, res) => {
+    const id = Number(req.params.engFormID);
+    const [affected] = await NcrEngineerForm.update(req.body, {
+      where: { engFormID: id },
+    });
+    if (!affected)
+      return res
+        .status(404)
+        .json({ status: "error", message: "Engineering form not found" });
+    res.json({
+      status: "success",
+      message: "Engineering form updated successfully",
+    });
+  }
+);
 
-    try {
-        const existingData = readJsonFile(filename);
-        const index = existingData.findIndex(item => item.engFormID === parseInt(engFormID));
-
-        if (index === -1) {
-            return res.status(404).json({ status: 'error', message: 'Engineering form not found' });
-        }
-
-        existingData[index] = { ...existingData[index], ...updatedData };
-        writeJsonFile(filename, existingData);
-        res.json({ status: 'success', message: 'Engineering form updated successfully' });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to write JSON file' });
-    }
-});
-
-// DELETE an Engineering form by engFormID
-router.delete('/:engFormID', (req, res) => {
-    const engFormID = req.params.engFormID;
-
-    try {
-        const existingData = readJsonFile(filename);
-        const updatedData = existingData.filter(item => item.engFormID !== parseInt(engFormID));
-
-        if (updatedData.length === existingData.length) {
-            return res.status(404).json({ status: 'error', message: 'Engineering form not found' });
-        }
-
-        writeJsonFile(filename, updatedData);
-        res.json({ status: 'success', message: 'Engineering form deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to write JSON file' });
-    }
-});
+router.delete(
+  "/:engFormID",
+  requireRole(["Administrator", "Supervisor"]),
+  async (req, res) => {
+    const id = Number(req.params.engFormID);
+    const deleted = await NcrEngineerForm.destroy({ where: { engFormID: id } });
+    if (!deleted)
+      return res
+        .status(404)
+        .json({ status: "error", message: "Engineering form not found" });
+    res.json({
+      status: "success",
+      message: "Engineering form deleted successfully",
+    });
+  }
+);
 
 module.exports = router;

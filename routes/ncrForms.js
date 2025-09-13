@@ -1,165 +1,56 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const { LIMIT_LENGTH } = require('sqlite3');
-const { read } = require('pdfkit');
+const express = require("express");
 const router = express.Router();
+const { NcrForm } = require("../db/models");
+const paginate = require("../utils/paginate");
+const { requireRole } = require("../utils/authz");
 
-// Path to the JSON file
-const filename = path.join(__dirname, '../public/assets/data/ncr_form.json');
+// read for all authenticated
+router.get("/", async (req, res) => {
+  try {
+    res.json(await paginate(NcrForm, req));
+  } catch {
+    res.status(500).json({ status: "error", message: "DB error" });
+  }
+});
 
-// Read JSON file utility function
-const readJsonFile = (file) => {
-    const data = fs.readFileSync(file, 'utf8');
-    return JSON.parse(data);
-};
+router.get("/:ncrFormID", async (req, res) => {
+  const id = Number(req.params.ncrFormID);
+  const row = await NcrForm.findByPk(id);
+  if (!row)
+    return res
+      .status(404)
+      .json({ status: "error", message: "NCR form not found" });
+  res.json(row);
+});
 
-// Write JSON file utility function
-const writeJsonFile = (file, data) => {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
-};
+// create/update allowed to Admin/Supervisor
+router.post(
+  "/",
+  requireRole(["Administrator", "Supervisor"]),
+  async (req, res) => {
+    const last = await NcrForm.findOne({ order: [["ncrFormID", "DESC"]] });
+    const nextId = last ? last.ncrFormID + 1 : 1;
+    const created = await NcrForm.create({ ...req.body, ncrFormID: nextId });
+    res
+      .status(201)
+      .json({ message: "NCR form created successfully", ncrForm: created });
+  }
+);
 
-function paginatedResults(model){
-    return (req, res, next) => {
-        const page = parseInt(req.query.page);
-        const limit = parseInt(req.query.limit);
-
-        const startIndex = (page -1) * limit;
-        const endIndex = page * limit;
-
-        const results = {}
-
-        if(endIndex < model.length){
-            results.next = {
-                page: page + 1,
-                limit: limit
-            }
-        }
-
-        if(startIndex > 0){
-            results.previous = {
-                page: page - 1,
-                limit: limit
-            }
-        }
-
-        results.results = model.slice(startIndex, endIndex);
-
-        res.paginatedResults = results;
-        next();
-    }
-}
-
-// GET all NCR forms
-router.get('/', (req, res, next) => {
-    try {
-        const data = readJsonFile(filename); 
-
-        if (Object.keys(req.query).length === 0) {
-            return res.json({
-                status: 'success',
-                totalRecords: data.length,
-                totalPages: Math.ceil(data.length / 10),
-                currentPage: 1, 
-                items: data,
-            });
-        }
-
-        res.locals.data = data; 
-        paginatedResults(data)(req, res, next);
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to read JSON file' });
-    }
-}, (req, res) => {
-    const data = res.locals.data; 
-    const totalRecords = data.length;
-    const limit = parseInt(req.query.limit) || 10; 
-    const totalPages = Math.ceil(totalRecords / limit);
-    const currentPage = parseInt(req.query.page) || 1;
-
-    res.json({
-        status: 'success',
-        totalRecords: totalRecords,
-        totalPages: totalPages,
-        currentPage: currentPage,
-        items: res.paginatedResults.results,
-        next: res.paginatedResults.next,
-        previous: res.paginatedResults.previous
+router.put(
+  "/:ncrFormID",
+  requireRole(["Administrator", "Supervisor"]),
+  async (req, res) => {
+    const id = Number(req.params.ncrFormID);
+    const [affected] = await NcrForm.update(req.body, {
+      where: { ncrFormID: id },
     });
-});
+    if (!affected)
+      return res
+        .status(404)
+        .json({ status: "error", message: "NCR form not found" });
+    res.json({ status: "success", message: "NCR form updated successfully" });
+  }
+);
 
-// GET a specific NCR form by ncrFormID
-router.get('/:ncrFormID', (req, res) => {
-    const ncrFormID = parseInt(req.params.ncrFormID, 10); // Get ncrFormID from the route parameters
-
-    try {
-        const existingData = readJsonFile(filename);
-        const ncrForm = existingData.find(item => item.ncrFormID === ncrFormID);
-
-        if (!ncrForm) {
-            // If the NCR form does not exist, return 404
-            return res.status(404).json({ status: 'error', message: 'NCR form not found' });
-        }
-
-        res.json(ncrForm); // Return the specific NCR form as JSON
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to read JSON file' });
-    }
-});
-
-// POST to create a new NCR form
-router.post('/', (req, res) => {
-    const newNCRForm = req.body;
-
-    // Read existing data
-    fs.readFile(filename, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ message: 'Error reading data file' });
-
-        const ncrForms = JSON.parse(data);
-
-        const newNcrFormID = ncrForms.length > 0 ? ncrForms[ncrForms.length - 1].ncrFormID + 1 : 1;
-        newNCRForm.ncrFormID = newNcrFormID; 
-
-        ncrForms.push(newNCRForm);
-
-        fs.writeFile(filename, JSON.stringify(ncrForms, null, 2), (err) => {
-            if (err) return res.status(500).json({ message: 'Error writing to data file' });
-            res.status(201).json({
-                message: 'NCR form created successfully',
-                ncrForm: newNCRForm, 
-            });
-        });
-    });
-});
-
-// PUT (Update) an NCR form by ncrFormID
-router.put('/:ncrFormID', (req, res) => {
-    const ncrFormID = parseInt(req.params.ncrFormID, 10); 
-    const updatedData = req.body; 
-
-    if (!updatedData || Object.keys(updatedData).length === 0) {
-        return res.status(400).json({ status: 'error', message: 'No data provided to update' });
-    }
-
-    try {
-        const existingData = readJsonFile(filename);
-        const index = existingData.findIndex(item => item.ncrFormID === ncrFormID);
-
-        if (index === -1) {
-            return res.status(404).json({ status: 'error', message: 'NCR form not found' });
-        }
-
-        existingData[index] = { ...existingData[index], ...updatedData };
-
-        writeJsonFile(filename, existingData);
-        res.json({ status: 'success', message: 'NCR form updated successfully' });
-
-    } catch (error) {
-        console.error(error);  
-        res.status(500).json({ status: 'error', message: 'Server error' });
-    }
-});
-
-
-// Export the router
 module.exports = router;

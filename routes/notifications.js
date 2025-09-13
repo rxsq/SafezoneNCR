@@ -1,147 +1,70 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
+const express = require("express");
 const router = express.Router();
+const { Notification } = require("../db/models");
+const { requireRole } = require("../utils/authz");
 
-// Helper function to read notifications from the JSON file
-function readNotifications(callback) {
-    const filename = path.join(__dirname, '../public/assets/data/notifications.json'); 
-    fs.readFile(filename, 'utf8', (err, data) => {
-        if (err) {
-            callback(err, null);
-            return;
-        }
-        const notifications = JSON.parse(data);
-        callback(null, notifications);
-    });
-}
+// add notification (any logged-in user)
+router.post("/add", async (req, res) => {
+  const { user_id, message, ncrFormID } = req.body;
+  if (!user_id || !message)
+    return res.status(400).json({ error: "User ID and message are required." });
 
-// Helper function to write notifications to the JSON file
-function writeNotifications(notifications, callback) {
-    const filename = path.join(__dirname, '../public/assets/data/notifications.json'); 
-    fs.writeFile(filename, JSON.stringify(notifications, null, 2), (err) => {
-        if (err) {
-            console.error('Error writing to notifications file:', err); 
-        }
-        callback(err);
-    });
-}
+  const last = await Notification.findOne({ order: [["id", "DESC"]] });
+  const nextId = last ? last.id + 1 : 1;
 
-// Route 1: Add a new notification
-router.post('/add', (req, res) => {
-    const { user_id, message, ncrFormID } = req.body;  
-    console.log('Received notification data:', req.body); 
+  await Notification.create({
+    id: nextId,
+    ncrFormID: ncrFormID ?? null,
+    user_id,
+    message,
+    status: "unread",
+    created_at: new Date().toISOString(),
+  });
 
-    if (!user_id || !message) {
-        return res.status(400).json({ error: 'User ID and message are required.' });
-    }
-
-    // Read current notifications
-    readNotifications((err, notifications) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error reading notifications file.' });
-        }
-
-        console.log('Current notifications:', notifications); 
-
-        // Create a new notification
-        const newNotification = {
-            user_id,
-            message,
-            status: 'unread',
-            created_at: new Date().toISOString(),
-            id: notifications.length + 1,  
-            ncrFormID  
-        };
-
-        // Add the new notification to the list
-        notifications.push(newNotification);
-
-        // Log the updated notifications list
-        console.log('Updated notifications:', notifications);
-
-        // Write back the updated notifications to the file
-        writeNotifications(notifications, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error writing to notifications file.' });
-            }
-            res.status(201).json({ message: 'Notification added successfully.' });
-        });
-    });
+  res.status(201).json({ message: "Notification added successfully." });
 });
 
-// Route 2: Get notifications for a specific user
-router.get('/:userId', (req, res) => {
-    const userId = parseInt(req.params.userId);
-
-    // Read notifications from the file
-    readNotifications((err, notifications) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error reading notifications file.' });
-        }
-
-        // Filter notifications for the user
-        const userNotifications = notifications.filter(n => n.user_id === userId);
-
-        res.json(userNotifications);
-    });
+// get notifications for current user (ignore path param; enforce session)
+router.get("/:userId", async (req, res) => {
+  const me = req.session?.user?.empID;
+  const reqId = Number(req.params.userId);
+  if (
+    me !== reqId &&
+    !["Administrator", "Supervisor"].includes(req.session?.user?.role)
+  ) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const items = await Notification.findAll({ where: { user_id: reqId } });
+  res.json(items);
 });
 
-// Route 3: Mark a notification as read
-router.post('/read/:notificationId', (req, res) => {
-    const notificationId = parseInt(req.params.notificationId);
+// mark as read (owner or admin/supervisor)
+router.post("/read/:notificationId", async (req, res) => {
+  const id = Number(req.params.notificationId);
+  const me = req.session?.user?.empID;
+  const notif = await Notification.findByPk(id);
+  if (!notif) return res.status(404).json({ error: "Notification not found." });
 
-    // Read current notifications
-    readNotifications((err, notifications) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error reading notifications file.' });
-        }
+  const can =
+    notif.user_id === me ||
+    ["Administrator", "Supervisor"].includes(req.session?.user?.role);
+  if (!can) return res.status(403).json({ error: "Forbidden" });
 
-        // Find the notification and mark it as read
-        const notification = notifications.find(n => n.id === notificationId);
-        if (!notification) {
-            return res.status(404).json({ error: 'Notification not found.' });
-        }
-
-        notification.status = 'read';
-
-        // Write back the updated notifications to the file
-        writeNotifications(notifications, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error writing to notifications file.' });
-            }
-            res.json({ message: 'Notification marked as read.' });
-        });
-    });
+  await Notification.update({ status: "read" }, { where: { id } });
+  res.json({ message: "Notification marked as read." });
 });
 
-// Route 4: Delete a notification
-router.delete('/:notificationId', (req, res) => {
-    const notificationId = parseInt(req.params.notificationId);
-
-    // Read current notifications
-    readNotifications((err, notifications) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error reading notifications file.' });
-        }
-
-        // Find the notification and remove it
-        const notificationIndex = notifications.findIndex(n => n.id === notificationId);
-        if (notificationIndex === -1) {
-            return res.status(404).json({ error: 'Notification not found.' });
-        }
-
-        notifications.splice(notificationIndex, 1);
-
-        // Write back the updated notifications to the file
-        writeNotifications(notifications, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error writing to notifications file.' });
-            }
-            res.json({ message: 'Notification deleted successfully.' });
-        });
-    });
-});
+// delete (admin only)
+router.delete(
+  "/:notificationId",
+  requireRole(["Administrator"]),
+  async (req, res) => {
+    const id = Number(req.params.notificationId);
+    const deleted = await Notification.destroy({ where: { id } });
+    if (!deleted)
+      return res.status(404).json({ error: "Notification not found." });
+    res.json({ message: "Notification deleted successfully." });
+  }
+);
 
 module.exports = router;
