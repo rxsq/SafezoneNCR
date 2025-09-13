@@ -1,6 +1,7 @@
 class CFSidebar extends HTMLElement {
   connectedCallback() {
     const path = location.pathname.replace(/\/+$/, "");
+
     this.innerHTML = `
       <div class="sidebar" id="sidebar">
         <div class="logo-content">
@@ -19,7 +20,7 @@ class CFSidebar extends HTMLElement {
               <span class="links-name">Dashboard</span>
             </a>
           </li>
-          <li id="create-ncr-nav" style="display: none">
+          <li id="create-ncr-nav" style="display:none">
             <a href="non-conformance-report.html" data-bs-toggle="tooltip" title="Create NCR" id="createNCRLink" data-nav="non-conformance-report.html">
               <i class="bi bi-file-earmark-plus"></i>
               <span class="links-name">Create NCR</span>
@@ -43,7 +44,7 @@ class CFSidebar extends HTMLElement {
               <span class="links-name">Products</span>
             </a>
           </li>
-          <li id="employees-nav" style="display: none">
+          <li id="employees-nav" style="display:none">
             <a href="Employee.html" data-bs-toggle="tooltip" title="Employees" data-nav="Employee.html">
               <i class="bi bi-people"></i>
               <span class="links-name">Employees</span>
@@ -70,25 +71,51 @@ class CFSidebar extends HTMLElement {
             <div class="profile-details">
               <img src="/assets/crossfire_logo.PNG" alt="Logo for CrossFire Niagara" />
               <div class="name-job">
-                <div class="name">CrossFire Niagara</div>
-                <div class="job">Admin</div>
+                <div class="name">User</div>
+                <div class="job"></div>
               </div>
             </div>
-            <i class="bi bi-box-arrow-left" id="log-out"></i>
+            <i class="bi bi-box-arrow-left" id="log-out" title="Log out"></i>
           </div>
         </div>
       </div>
     `;
 
+    // ---- Fill from session/local storage ----
+    const safe = (s) => (s ?? "").toString().replace(/[<>]/g, "");
+
+    const userName =
+      sessionStorage.getItem("userName") ||
+      localStorage.getItem("userName") ||
+      "User";
+
+    const userRole =
+      sessionStorage.getItem("userRole") ||
+      localStorage.getItem("userRole") ||
+      "";
+
+    const nameEl = this.querySelector(".profile .name");
+    const roleEl = this.querySelector(".profile .job");
+    if (nameEl) nameEl.textContent = safe(userName);
+    if (roleEl) roleEl.textContent = safe(userRole);
+
+    // ---- Role-based nav visibility (example: show admin-only items) ----
+    if (userRole.toLowerCase() === "administrator") {
+      const createNcrNav = this.querySelector("#create-ncr-nav");
+      const employeesNav = this.querySelector("#employees-nav");
+      if (createNcrNav) createNcrNav.style.display = "";
+      if (employeesNav) employeesNav.style.display = "";
+    }
+
+    // ---- Mark active nav link ----
     const links = this.querySelectorAll("a[data-nav]");
+    const filename =
+      this.dataset.active || path.split("/").pop() || "index.html";
     links.forEach((a) => {
-      const href = a.getAttribute("data-nav");
-      const filename = path.split("/").pop() || "index.html";
-      if (href === filename) {
-        a.classList.add("active");
-      }
+      if (a.getAttribute("data-nav") === filename) a.classList.add("active");
     });
 
+    // ---- Bootstrap tooltips inside component ----
     if (window.bootstrap) {
       this.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
         try {
@@ -97,10 +124,22 @@ class CFSidebar extends HTMLElement {
       });
     }
 
+    // ---- Sidebar toggle ----
     const toggleBtn = this.querySelector("#btn-close");
     if (toggleBtn) {
       toggleBtn.addEventListener("click", () => {
         document.body.classList.toggle("sidebar-collapsed");
+      });
+    }
+
+    // ---- Logout ----
+    const logoutBtn = this.querySelector("#log-out");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        ["empID", "mode", "userName", "userRole"].forEach((k) =>
+          sessionStorage.removeItem(k)
+        );
+        location.href = "/login.html";
       });
     }
   }

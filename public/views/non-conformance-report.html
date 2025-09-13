@@ -1,379 +1,519 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>New NCR Report</title>
     <!-- Bootstrap Icons link -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
     <!-- Bootstrap link -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="../assets/css/style.css">
-</head>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="../css/style.css" />
+    <script defer src="../js/components/cf-sidebar.js"></script>
+  </head>
 
-<body>
-    <a href="#ncr-section" class="skip-link" role="button">Skip to NCR Section</a>
-    <a href="#quality-fieldset" class="skip-link" role="button">Skip to Quality Inspector Section</a>
-    <a href="#engineering-fieldset" class="skip-link" role="button">Skip to Engineering Section</a>
-    <a href="#purchasing-fieldset" class="skip-link" role="button">Skip to Purchasing Section</a>
+  <body>
+    <a href="#ncr-section" class="skip-link" role="button"
+      >Skip to NCR Section</a
+    >
+    <a href="#quality-fieldset" class="skip-link" role="button"
+      >Skip to Quality Inspector Section</a
+    >
+    <a href="#engineering-fieldset" class="skip-link" role="button"
+      >Skip to Engineering Section</a
+    >
+    <a href="#purchasing-fieldset" class="skip-link" role="button"
+      >Skip to Purchasing Section</a
+    >
 
-    <div class="sidebar" id="sidebar">
-        <div class="logo-content">
-            <div class="logo">
-                <a href="index.html">
-                    <img src="../assets/images/crossfire_logo_edited.png" alt="Logo for CrossFire Niagara">
-                </a>
-            </div>
-            <i class="bi bi-list" id="btn-close"></i>
-        </div>
-        <ul class="nav-list">
-            <li>
-                <a href="index.html" data-bs-toggle="tooltip" title="Dashboard">
-                    <i class="bi bi-speedometer2"></i>
-                    <span class="links-name">Dashboard</span>
-                </a>
-            </li>
-            <li id="create-ncr-nav" style="display:none;">
-                <a href="non-conformance-report.html" data-bs-toggle="tooltip" title="Create NCR" id="createNCRLink">
-                    <i class="bi bi-file-earmark-plus"></i>
-                    <span class="links-name">Create NCR</span>
-                </a>
-            </li>
-            <li>
-                <a href="ncr-log.html" data-bs-toggle="tooltip" title="NCR Log" id="ncr-log-nav">
-                    <i class="bi bi-card-list"></i>
-                    <span class="links-name">NCR Log</span>
-                </a>
-            </li>
-            <li>
-                <a href="ncr-data.html" data-bs-toggle="tooltip" title="NCR Data" id="ncr-data-nav">
-                    <i class="bi bi-bar-chart"></i>
-                    <span class="links-name">NCR Data</span>
-                </a>
-            </li>
-            <li>
-                <a href="product.html" data-bs-toggle="tooltip" title="Products" id="products-nav">
-                    <i class="bi bi-box-seam"></i>
-                    <span class="links-name">Products</span>
-                </a>
-            </li>
-            <li id="employees-nav"  style="display: none;">
-                <a href="Employee.html" data-bs-toggle="tooltip" title="Employees">
-                    <i class="bi bi-people"></i>
-                    <span class="links-name">Employees</span>
-                </a>
-            </li>
-            <li>
-                <a href="supplier.html" data-bs-toggle="tooltip" title="Supplier" id="suppliers-nav">
-                    <i class="bi bi-truck"></i>
-                    <span class="links-name">Suppliers</span>
-                </a>
-            </li>
-        </ul>
-
-        <div class="notification-container">
-            <a href="#" class="notification-link" data-bs-toggle="modal" data-bs-target="#notificationModal">
-                <i class="bi bi-bell"></i>
-                <span class="notification-label">Notifications</span>
-                <span id="notificationCount" class="badge bg-danger"></span>
-            </a>
-        </div>
-        <div class="profile-content">
-            <div class="profile">
-                <div class="profile-details">
-                    <img src="/assets/images/crossfire_logo.PNG" alt="Logo for CrossFire Niagara">
-                    <div class="name-job">
-                        <div class="name">CrossFire Niagara</div>
-                        <div class="job">Admin</div>
-                    </div>
-                </div>
-                <i class="bi bi-box-arrow-left" id="log-out"></i>
-            </div>
-        </div>
-    </div>
+    <cf-sidebar></cf-sidebar>
     <div class="home-content">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb" style="justify-content: flex-start;">
-                <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Non-Conformance Report</li>
-            </ol>
-        </nav>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb" style="justify-content: flex-start">
+          <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Non-Conformance Report
+          </li>
+        </ol>
+      </nav>
 
-        <form id="qualityForm" enctype="multipart/form-data">
-            <fieldset class="border p-2" id="ncr-section">
-                <legend class="w-auto">Non-Conformance Report</legend>
+      <form id="qualityForm" enctype="multipart/form-data">
+        <fieldset class="border p-2" id="ncr-section">
+          <legend class="w-auto">Non-Conformance Report</legend>
+          <div class="two-column">
+            <div class="form-group">
+              <label for="ncr-no">NCR Number</label>
+              <input
+                type="text"
+                id="ncr-no"
+                name="ncrNo"
+                value="{ncrNo}"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label for="document-no">Document Number</label>
+              <input
+                type="text"
+                id="document-no"
+                name="docNo"
+                value="OPS-00011"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label for="ncr-date">Issue Date</label>
+              <input type="date" id="ncr-date" name="ncrDate" readonly />
+            </div>
+            <div class="form-group">
+              <label for="stage">Status</label>
+              <input
+                type="text"
+                id="stage"
+                name="stage"
+                value="{stage}"
+                readonly
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="border p-2">
+          <legend class="w-auto collapsible" id="legend-quality">
+            Quality Representative
+          </legend>
+          <div
+            id="error-message"
+            class="error-message"
+            style="color: red"
+          ></div>
+          <div id="section-quality">
+            <div class="two-column">
+              <div class="form-group">
+                <label for="supplier-name" class="required"
+                  >Supplier Name</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Select the supplier from the dropdown list."
+                ></i>
+                <select
+                  id="supplier-name"
+                  name="supplier-name"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                >
+                  <option value="" selected>Select a Supplier</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button
+                  class="new-suppliers-btn"
+                  data-bs-toggle="tooltip"
+                  title="Add New Supplier"
+                  id="new-suppliers-btn"
+                >
+                  <i class="bi bi-plus-circle"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label
+                  class="required"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                  >Identify Process Applicable</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Choose if it Supplier or Rec-Insp and WIP Production Order"
+                ></i>
+                <div class="checkbox-group" id="process-applicable">
+                  <label
+                    ><input
+                      type="radio"
+                      name="process-applicable"
+                      value="supplier"
+                      id="recInsp"
+                    />
+                    Supplier or Rec-Insp</label
+                  >
+                  <label
+                    ><input
+                      type="radio"
+                      name="process-applicable"
+                      value="wip"
+                      id="wip"
+                    />
+                    WIP (Production Order)</label
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="four-column">
+              <div class="form-group">
+                <label for="po-prod-no" class="required">Product</label>
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Select a product relating to the NCR."
+                ></i>
+                <select
+                  id="po-prod-no"
+                  name="po-prod-no"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                >
+                  <option value="" selected>Select a Product</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="sales-order-no" class="required"
+                  >Sales Order Number</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="A sales Order Number is required in this field which is required"
+                ></i>
+                <input
+                  type="text"
+                  id="sales-order-no"
+                  name="sales-order-no"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                />
+              </div>
+              <div class="form-group">
+                <label for="quantity-received" class="required"
+                  >Quantity Received</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Enter the quantity of the product received."
+                ></i>
+                <input
+                  type="text"
+                  id="quantity-received"
+                  name="quantity-received"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                />
+              </div>
+              <div class="form-group">
+                <label for="quantity-defective" class="required"
+                  >Quantity Defective</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Enter the quantity of the product that was defected."
+                ></i>
+                <input
+                  type="text"
+                  id="quantity-defective"
+                  name="quantity-defective"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="description-item" class="required"
+                >Description of Item (including SAP No.)</label
+              >
+              <i
+                class="bi bi-question-circle text-primary"
+                data-bs-toggle="tooltip"
+                data-bs-placement="right"
+                title="Provide a detailed description of the item, including its SAP number."
+              ></i>
+              <textarea
+                id="description-item"
+                name="description-item"
+                rows="3"
+                class="full-width"
+                data-bs-toggle="tooltip"
+                title="Required"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="description-defect" class="required"
+                >Description of Defect</label
+              >
+              <i
+                class="bi bi-question-circle text-primary"
+                data-bs-toggle="tooltip"
+                data-bs-placement="right"
+                title="Describe the defect in detail."
+              ></i>
+              <textarea
+                id="description-defect"
+                name="description-defect"
+                rows="3"
+                class="full-width"
+                data-bs-toggle="tooltip"
+                title="Required"
+              ></textarea>
+            </div>
+
+            <div class="two-column">
+              <div class="form-group">
+                <label>Upload Documents</label>
                 <div class="two-column">
-                    <div class="form-group">
-                        <label for="ncr-no">NCR Number</label>
-                        <input type="text" id="ncr-no" name="ncrNo" value="{ncrNo}" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="document-no">Document Number</label>
-                        <input type="text" id="document-no" name="docNo" value="OPS-00011" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="ncr-date">Issue Date</label>
-                        <input type="date" id="ncr-date" name="ncrDate" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="stage">Status</label>
-                        <input type="text" id="stage" name="stage" value="{stage}" readonly>
-                    </div>
+                  <label
+                    ><input id="file" type="file" name="qualityFile"
+                  /></label>
                 </div>
-            </fieldset>
-
-            <fieldset class="border p-2">
-                <legend class="w-auto collapsible" id="legend-quality">Quality Representative</legend>
-                <div id="error-message" class="error-message" style="color: red;"></div>
-                <div id="section-quality">
-                    <div class="two-column">
-                        <div class="form-group">
-                            <label for="supplier-name" class="required">Supplier Name</label>
-                                <i class="bi bi-question-circle text-primary" 
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="right" 
-                                title="Select the supplier from the dropdown list."></i>
-                           <select id="supplier-name" name="supplier-name" data-bs-toggle="tooltip" title="Required">
-                                <option value="" selected>Select a Supplier</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <button class="new-suppliers-btn" data-bs-toggle="tooltip" title="Add New Supplier"
-                                id="new-suppliers-btn">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
-                        </div>
-                        <div class="form-group">
-                            <label class="required" data-bs-toggle="tooltip" title="Required">Identify Process
-                                Applicable</label>
-                                <i class="bi bi-question-circle text-primary" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="right" 
-                            title="Choose if it Supplier or Rec-Insp and WIP Production Order"></i>
-                            <div class="checkbox-group" id="process-applicable">
-                                <label><input type="radio" name="process-applicable" value="supplier" id="recInsp">
-                                    Supplier or
-                                    Rec-Insp</label>
-                                <label><input type="radio" name="process-applicable" value="wip" id="wip"> WIP
-                                    (Production Order)</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="four-column">
-                        <div class="form-group">
-                            <label for="po-prod-no" class="required">Product</label>
-                            <i class="bi bi-question-circle text-primary" 
-                               data-bs-toggle="tooltip" 
-                               data-bs-placement="right" 
-                               title="Select a product relating to the NCR."></i>
-                            <select id="po-prod-no" name="po-prod-no" data-bs-toggle="tooltip" title="Required">
-                                <option value="" selected>Select a Product</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="sales-order-no" class="required">Sales Order Number</label>
-                            <i class="bi bi-question-circle text-primary" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="right" 
-                            title="A sales Order Number is required in this field which is required"></i>
-                            <input type="text" id="sales-order-no" name="sales-order-no" data-bs-toggle="tooltip"
-                                title="Required">
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity-received" class="required">Quantity Received</label>
-                            <i class="bi bi-question-circle text-primary" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="right" 
-                            title="Enter the quantity of the product received."></i>
-                            <input type="text" id="quantity-received" name="quantity-received" data-bs-toggle="tooltip"
-                                title="Required">
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity-defective" class="required">Quantity Defective</label>
-                            <i class="bi bi-question-circle text-primary" 
-                            data-bs-toggle="tooltip" 
-                            data-bs-placement="right" 
-                            title="Enter the quantity of the product that was defected."></i>
-                            <input type="text" id="quantity-defective" name="quantity-defective"
-                                data-bs-toggle="tooltip" title="Required">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="description-item" class="required">Description of Item (including SAP No.)</label>
-                        <i class="bi bi-question-circle text-primary" 
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="right" 
-                        title="Provide a detailed description of the item, including its SAP number."></i>
-                        <textarea id="description-item" name="description-item" rows="3" class="full-width"
-                            data-bs-toggle="tooltip" title="Required"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="description-defect" class="required">Description of Defect</label>
-                        <i class="bi bi-question-circle text-primary" 
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="right" 
-                        title="Describe the defect in detail."></i>
-                        <textarea id="description-defect" name="description-defect" rows="3" class="full-width"
-                            data-bs-toggle="tooltip" title="Required"></textarea>
-                    </div>
-
-                    <div class="two-column">
-                        <div class="form-group">
-                            <label>Upload Documents</label>
-                            <div class="two-column">
-                                <label><input id="file" type="file" name="qualityFile"></label>
-                            </div>
-                        </div>
-                        <div class="form-group" id="nonconforming-div">
-                            <label class="required" data-bs-toggle="tooltip" title="Required">Item Marked
-                                Nonconforming</label>
-                                <i class="bi bi-question-circle text-primary"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="right"
-                                title="Select Yes or No if Item is Marked"></i>
-                            <div class="two-column" id="item-nonconforming">
-                                <label><input type="radio" name="item-nonconforming" value="1"> Yes</label>
-                                <label><input type="radio" name="item-nonconforming" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="quality-rep-name" class="required">Quality Representative's Name</label>
-                            <input type="text" id="quality-rep-name" name="quality-rep-name" value="{qualityRepName}"
-                                data-bs-toggle="tooltip" title="Required" readonly>
-                            <!-- Readonly added for auto generation: Andrew-->
-                        </div>
-                        <div class="form-group">
-                            <label for="quality-rep-date">Date</label>
-                            <input type="date" id="quality-rep-date" name="quality-rep-date" readonly>
-                        </div>
-                    </div>
-
-                    <div class="form-group submit-btn-container">
-                        <button type="button" class="btn btn-secondary button-gap" id="sample-data-btn-quality">Sample Data</button>
-                        <button type="button" class="btn btn-secondary button-gap" id="save-changes-btn">Save Draft</button>
-                        <button type="submit" class="submit-btn" id="submit-quality-btn">Create New NCR</button>
-                    </div>
+              </div>
+              <div class="form-group" id="nonconforming-div">
+                <label
+                  class="required"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                  >Item Marked Nonconforming</label
+                >
+                <i
+                  class="bi bi-question-circle text-primary"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  title="Select Yes or No if Item is Marked"
+                ></i>
+                <div class="two-column" id="item-nonconforming">
+                  <label
+                    ><input type="radio" name="item-nonconforming" value="1" />
+                    Yes</label
+                  >
+                  <label
+                    ><input type="radio" name="item-nonconforming" value="0" />
+                    No</label
+                  >
                 </div>
-            </fieldset>
-        </form>
+              </div>
+              <div class="form-group">
+                <label for="quality-rep-name" class="required"
+                  >Quality Representative's Name</label
+                >
+                <input
+                  type="text"
+                  id="quality-rep-name"
+                  name="quality-rep-name"
+                  value="{qualityRepName}"
+                  data-bs-toggle="tooltip"
+                  title="Required"
+                  readonly
+                />
+                <!-- Readonly added for auto generation: Andrew-->
+              </div>
+              <div class="form-group">
+                <label for="quality-rep-date">Date</label>
+                <input
+                  type="date"
+                  id="quality-rep-date"
+                  name="quality-rep-date"
+                  readonly
+                />
+              </div>
+            </div>
+
+            <div class="form-group submit-btn-container">
+              <button
+                type="button"
+                class="btn btn-secondary button-gap"
+                id="sample-data-btn-quality"
+              >
+                Sample Data
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary button-gap"
+                id="save-changes-btn"
+              >
+                Save Draft
+              </button>
+              <button type="submit" class="submit-btn" id="submit-quality-btn">
+                Create New NCR
+              </button>
+            </div>
+          </div>
+        </fieldset>
+      </form>
     </div>
 
-<!-- Modal to Load Create Supplier Form -->
-<div class="modal fade" id="createSupplierModal" tabindex="-1" aria-labelledby="createSupplierModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="createSupplierModalLabel">Add New Supplier</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="modal-body-content">
+    <!-- Modal to Load Create Supplier Form -->
+    <div
+      class="modal fade"
+      id="createSupplierModal"
+      tabindex="-1"
+      aria-labelledby="createSupplierModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createSupplierModalLabel">
+              Add New Supplier
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="modal-body-content">
             <form id="supplier-form">
-                  <div id="error-message" class="error-message" style="color: red;"></div> <!-- Error message container -->
-                  <div class="">
-                    <div class="form-group">
-                      <label for="supName" class="required">Supplier Name</label>
-                      <input
-                        type="text"
-                        id="supName"
-                        name="products-supplied"
-                        aria-required="true"
-                        placeholder="Supplier Name or Company"
-                      >
-                    </div>
-                    <div class="two-column">
-                      <div class="form-group">
-                        <label for="supContactName" class="required">Contact Name</label>
-                        <input
-                          type="text"
-                          id="supContactName"
-                          aria-required="true"
-                          name="supplier-code"
-                        >
-                      </div>
-                      <div class="form-group">
-                        <label for="supContactEmail" class="required">Email</label>
-                        <input
-                          type="text"
-                          id="supContactEmail"
-                          aria-required="true"
-                          name="supplier-email"
-                        >
-                      </div>
-                      <div class="form-group">
-                        <label for="supContactPhone" class="required">Phone</label>
-                        <input
-                          type="text"
-                          id="supContactPhone"
-                          aria-required="true"
-                          name="supplier-phone"
-                        >
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="supAddress" class="required">Address</label>
-                    <input
-                          type="text"
-                          id="supAddress"
-                          aria-required="true"
-                          name="supplier-address"
-                        >
-                  </div>
-                  <div class="form-group">
-                    <label for="supCity" class="required">City</label>
-                    <input
-                          type="text"
-                          id="supCity"
-                          aria-required="true"
-                          name="supplier-city"
-                        >
-                  </div>
-                  <div class="form-group">
-                    <label for="supCountry" class="required">Country</label>
-                    <input
-                          type="text"
-                          id="supCountry"
-                          aria-required="true"
-                          name="supplier-country"
-                        >
-                  </div>
-                <div class="form-group submit-btn-container">
+              <div
+                id="error-message"
+                class="error-message"
+                style="color: red"
+              ></div>
+              <!-- Error message container -->
+              <div class="">
+                <div class="form-group">
+                  <label for="supName" class="required">Supplier Name</label>
+                  <input
+                    type="text"
+                    id="supName"
+                    name="products-supplied"
+                    aria-required="true"
+                    placeholder="Supplier Name or Company"
+                  />
                 </div>
-              </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="saveSupplierBtn">Save Supplier</button>
+                <div class="two-column">
+                  <div class="form-group">
+                    <label for="supContactName" class="required"
+                      >Contact Name</label
+                    >
+                    <input
+                      type="text"
+                      id="supContactName"
+                      aria-required="true"
+                      name="supplier-code"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="supContactEmail" class="required">Email</label>
+                    <input
+                      type="text"
+                      id="supContactEmail"
+                      aria-required="true"
+                      name="supplier-email"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="supContactPhone" class="required">Phone</label>
+                    <input
+                      type="text"
+                      id="supContactPhone"
+                      aria-required="true"
+                      name="supplier-phone"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="supAddress" class="required">Address</label>
+                <input
+                  type="text"
+                  id="supAddress"
+                  aria-required="true"
+                  name="supplier-address"
+                />
+              </div>
+              <div class="form-group">
+                <label for="supCity" class="required">City</label>
+                <input
+                  type="text"
+                  id="supCity"
+                  aria-required="true"
+                  name="supplier-city"
+                />
+              </div>
+              <div class="form-group">
+                <label for="supCountry" class="required">Country</label>
+                <input
+                  type="text"
+                  id="supCountry"
+                  aria-required="true"
+                  name="supplier-country"
+                />
+              </div>
+              <div class="form-group submit-btn-container"></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" id="saveSupplierBtn">
+              Save Supplier
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="successModalLabel">Success</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="successModalBody">
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        id="btnDismiss">Close</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="successModal"
+      tabindex="-1"
+      aria-labelledby="successModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="successModalLabel">Success</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="successModalBody"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              id="btnDismiss"
+            >
+              Close
+            </button>
+          </div>
         </div>
+      </div>
     </div>
     <script defer src="../assets/js/main/sidebar.js"></script>
     <script defer src="../assets/js/ncr/populate-form-fields.js"></script>
@@ -390,16 +530,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize popovers
-        document.addEventListener('DOMContentLoaded', function () {
-            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-                return new bootstrap.Popover(popoverTriggerEl);
-            });
+      // Initialize popovers
+      document.addEventListener("DOMContentLoaded", function () {
+        const popoverTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="popover"]')
+        );
+        const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+          return new bootstrap.Popover(popoverTriggerEl);
         });
+      });
     </script>
     <script src="../assets/js/main/inject-notification-modal.js"></script>
     <script src="../assets/js/main/notification-handling.js"></script>
-</body>
-
+  </body>
 </html>
