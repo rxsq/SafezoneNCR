@@ -1,12 +1,10 @@
 "use client";
 
 import "@/lib/chartjs";
-
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
 
-// Lazy-load chart components client-side
 const Line = dynamic(() => import("react-chartjs-2").then((m) => m.Line), {
   ssr: false,
 });
@@ -26,7 +24,6 @@ type OverviewResponse = {
   recentOpen: any[];
 };
 
-/** Pull theme colors from CSS vars (shadcn/ui compatible), with fallbacks */
 function useThemeColors() {
   return useMemo(() => {
     if (typeof window === "undefined") {
@@ -58,14 +55,14 @@ function useThemeColors() {
   }, []);
 }
 
-/** Make a translucent version of an HSL color string: hsl(...) -> hsla(... / a) */
 function withAlpha(hslColor: string, alpha = 0.15) {
-  // Accepts either hsl(h s l) or hsl(h, s, l)
   return hslColor.replace(
     /^hsl\((.*)\)$/,
     (_m, inner) => `hsla(${inner} / ${alpha})`
   );
 }
+
+/* ---------- Dashboard ---------- */
 
 export default function DashboardPage() {
   const [data, setData] = useState<OverviewResponse | null>(null);
@@ -86,62 +83,83 @@ export default function DashboardPage() {
   }, []);
 
   const totals = data?.totals || { total: 0, open: 0, closed: 0 };
+  const months = data?.months ?? { labels: [], counts: [] };
 
-  // Line: NCRs by month (last 12) – single dataset from API
+  // Derived KPIs
+  const supplierCoverage = data?.suppliers?.length ?? 0;
+  const momDelta = useMemo(() => {
+    const arr = months.counts;
+    if (!arr || arr.length < 2) return { pct: 0, up: false };
+    const last = arr[arr.length - 1] || 0;
+    const prev = arr[arr.length - 2] || 0;
+    const pct =
+      prev === 0 ? (last > 0 ? 100 : 0) : ((last - prev) / prev) * 100;
+    return { pct, up: last >= prev };
+  }, [months]);
+
+  /* Charts */
+
   const lineData = useMemo(() => {
-    const labels = data?.months?.labels ?? [];
-    const totals = data?.months?.counts ?? [];
     const c = theme.chart[0];
     return {
-      labels,
+      labels: months.labels,
       datasets: [
         {
-          label: "Total",
-          data: totals,
+          label: "Total NCRs",
+          data: months.counts,
           borderColor: c,
           backgroundColor: withAlpha(c, 0.18),
           borderWidth: 2,
-          pointRadius: 2,
-          pointHoverRadius: 4,
+          pointRadius: 1.5,
+          pointHoverRadius: 3,
           tension: 0.35,
           fill: true,
         },
       ],
     };
-  }, [data, theme]);
+  }, [months, theme]);
 
   const lineOpts = useMemo(
     () => ({
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { position: "top" as const, labels: { color: theme.fg } },
+        legend: { display: false },
         tooltip: { intersect: false, mode: "index" as const },
       },
       scales: {
         x: {
           ticks: { color: theme.muted },
-          grid: { color: withAlpha(theme.grid, 0.6) },
+          grid: { color: withAlpha(theme.grid, 0.5) },
         },
         y: {
           beginAtZero: true,
-          ticks: { stepSize: 1, color: theme.muted },
-          grid: { color: withAlpha(theme.grid, 0.6) },
+          ticks: { color: theme.muted },
+          grid: { color: withAlpha(theme.grid, 0.5) },
         },
       },
     }),
     [theme]
   );
 
-  // Doughnut: Stage distribution
   const stageData = useMemo(() => {
     const entries = Object.entries(data?.stages ?? {});
     const labels = entries.map(([k]) => k);
     const values = entries.map(([, v]) => v);
     const colors = labels.map((_, i) => theme.chart[i % theme.chart.length]);
-    return { labels, datasets: [{ data: values, backgroundColor: colors }] };
+    return {
+      labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: colors,
+          borderColor: "#fff",
+          borderWidth: 1,
+        },
+      ],
+    };
   }, [data, theme]);
 
-  // Bar: Top suppliers
   const supplierBarData = useMemo(() => {
     const labels = (data?.suppliers ?? []).map((s) => s.label);
     const values = (data?.suppliers ?? []).map((s) => s.value);
@@ -153,7 +171,7 @@ export default function DashboardPage() {
           label: "NCRs",
           data: values,
           backgroundColor: colors,
-          borderWidth: 1,
+          borderWidth: 0,
         },
       ],
     };
@@ -161,90 +179,226 @@ export default function DashboardPage() {
 
   const barOpts = useMemo(
     () => ({
+      indexAxis: "y" as const,
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { display: false, labels: { color: theme.fg } },
+        legend: { display: false },
         tooltip: { intersect: false, mode: "index" as const },
       },
+      layout: { padding: { right: 6 } },
       scales: {
         x: {
-          ticks: { maxRotation: 45, minRotation: 45, color: theme.muted },
-          grid: { color: withAlpha(theme.grid, 0.6) },
-        },
-        y: {
           beginAtZero: true,
-          ticks: { stepSize: 1, color: theme.muted },
-          grid: { color: withAlpha(theme.grid, 0.6) },
+          ticks: { color: theme.muted },
+          grid: { color: withAlpha(theme.grid, 0.5) },
         },
+        y: { ticks: { color: theme.muted }, grid: { display: false } },
       },
     }),
     [theme]
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 2xl:space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="text-lg font-semibold">Quality Dashboard</h1>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <CardStat title="Total" value="…" />
-          <CardStat title="Open" value="…" />
-          <CardStat title="Closed" value="…" />
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <CardStat title="Total" value={totals.total} />
-            <CardStat title="Open" value={totals.open} />
-            <CardStat title="Closed" value={totals.closed} />
+      {/* KPI row (larger cards with tooltips) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 2xl:gap-6">
+        <CardStat
+          title="Total NCRs"
+          help="All NCRs in the system (any status)."
+        >
+          {loading ? "…" : totals.total}
+        </CardStat>
+        <CardStat title="Open" help="NCRs currently open (Status = Open).">
+          {loading ? "…" : totals.open}
+        </CardStat>
+        <CardStat title="Closed" help="NCRs closed/verified (Status = Closed).">
+          {loading ? "…" : totals.closed}
+        </CardStat>
+        <CardStat
+          title="MoM Δ"
+          help="Month-over-Month change in total NCRs: ((This month − Last month) / Last month) × 100."
+        >
+          {loading ? (
+            "…"
+          ) : (
+            <span
+              className={`inline-flex items-center gap-1 ${
+                momDelta.up ? "text-emerald-600" : "text-rose-600"
+              }`}
+            >
+              <Arrow up={momDelta.up} />
+              {Math.abs(momDelta.pct).toFixed(1)}%
+            </span>
+          )}
+        </CardStat>
+        <CardStat
+          title="Top Suppliers Listed"
+          help="Count of suppliers shown in the Top Suppliers chart (highest NCR counts)."
+        >
+          {loading ? "…" : supplierCoverage}
+        </CardStat>
+        <CardStat
+          title="Open Rate"
+          help="Open NCRs divided by total NCRs (Open ÷ Total)."
+        >
+          {loading
+            ? "…"
+            : `${
+                totals.total
+                  ? Math.round((totals.open / totals.total) * 100)
+                  : 0
+              }%`}
+        </CardStat>
+      </div>
+
+      {/* Charts row (taller for desktop readability) */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <ChartCard
+          title="NCRs by Month (12 mo)"
+          help="Total NCR volume per month (last 12 months)."
+        >
+          <div className="h-80 xl:h-72">
+            <Line data={lineData} options={lineOpts} />
           </div>
+        </ChartCard>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <ChartCard title="NCRs by Month (Last 12)">
-              <Line data={lineData} options={lineOpts} />
-            </ChartCard>
-
-            <ChartCard title="Stage Distribution">
-              <Doughnut data={stageData} />
-            </ChartCard>
-
-            <ChartCard title="Top Suppliers (NCR count)">
-              <Bar data={supplierBarData} options={barOpts} />
-            </ChartCard>
+        <ChartCard
+          title="Stage Mix"
+          help="Proportion of NCRs at each stage (QUA/ENG/PUR/etc)."
+        >
+          <div className="h-80 xl:h-72">
+            <Doughnut data={stageData} />
           </div>
+        </ChartCard>
 
-          <RecentOpen />
-        </>
-      )}
+        <ChartCard
+          title="Top Suppliers (by NCRs)"
+          help="Suppliers with the most NCRs (descending)."
+        >
+          <div className="h-80 xl:h-72">
+            <Bar data={supplierBarData} options={barOpts} />
+          </div>
+        </ChartCard>
+      </div>
+
+      <RecentOpen />
     </div>
   );
 }
 
-function CardStat({ title, value }: { title: string; value: number | string }) {
+/* ---------- UI Bits (with tooltips) ---------- */
+
+function CardStat({
+  title,
+  help,
+  children,
+}: {
+  title: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="bg-white border rounded p-4">
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="text-2xl font-semibold">{value}</div>
+    <div className="bg-white border rounded px-4 py-3 shadow-sm">
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <span>{title}</span>
+        {help && (
+          <span className="text-gray-400 cursor-help" title={help}>
+            ⓘ
+          </span>
+        )}
+      </div>
+      <div className="text-2xl font-bold mt-1">{children}</div>
     </div>
   );
 }
 
 function ChartCard({
   title,
+  help,
   children,
 }: {
   title: string;
+  help?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border rounded p-4">
-      <div className="text-sm text-gray-700 mb-3">{title}</div>
-      <div className="h-64">{children}</div>
+    <div className="bg-white border rounded p-3 2xl:p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[13px] text-gray-700">{title}</div>
+        {help && <HelpTooltip text={help} />}
+      </div>
+      {children}
     </div>
   );
 }
+
+function HelpTooltip({ text }: { text: string }) {
+  return (
+    <div className="relative group inline-flex">
+      <button
+        type="button"
+        aria-label="Help"
+        className="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
+        tabIndex={0}
+      >
+        <InfoIcon />
+      </button>
+      {/* Tooltip */}
+      <div
+        role="tooltip"
+        className="pointer-events-none absolute right-0 top-full z-10 hidden w-64 whitespace-normal rounded border bg-white p-2 text-[12px] leading-snug text-gray-700 shadow group-hover:block group-focus-within:block"
+      >
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z" />
+    </svg>
+  );
+}
+
+function Arrow({ up }: { up: boolean }) {
+  return up ? (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 5l7 7h-4v7h-6v-7H5z" />
+    </svg>
+  ) : (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 19l-7-7h4V5h6v7h4z" />
+    </svg>
+  );
+}
+
+/* ---------- Table ---------- */
 
 function RecentOpen() {
   const [rows, setRows] = useState<any[]>([]);
@@ -260,13 +414,13 @@ function RecentOpen() {
         }>("/api/ncrForms?limit=1000");
         const list = Array.isArray(data) ? (data as any[]) : data.items || [];
         const sorted = list
-          .filter((i) => i.ncrStatusID === 1)
+          .filter((i) => Number(i.ncrStatusID) === 1)
           .sort(
             (a, b) =>
-              new Date(b.ncrIssueDate ?? 0).getTime() -
-              new Date(a.ncrIssueDate ?? 0).getTime()
+              new Date(b.ncrIssueDate ?? b.createdAt ?? 0).getTime() -
+              new Date(a.ncrIssueDate ?? a.createdAt ?? 0).getTime()
           )
-          .slice(0, 5);
+          .slice(0, 10);
         setRows(sorted);
       } finally {
         setLoading(false);
@@ -275,15 +429,18 @@ function RecentOpen() {
   }, []);
 
   return (
-    <div>
-      <h2 className="font-medium mb-2">Most Recent (Open)</h2>
-      <div className="overflow-x-auto border rounded">
+    <div className="bg-white border rounded p-3 2xl:p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[13px] text-gray-700">Most Recent (Open)</div>
+        <HelpTooltip text="The latest open NCRs by issue date." />
+      </div>
+      <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
-              <th className="p-2 text-left">NCR No</th>
-              <th className="p-2 text-left">Issue Date</th>
-              <th className="p-2 text-left">Stage</th>
+              <Th>NCR No</Th>
+              <Th>Issue Date</Th>
+              <Th>Stage</Th>
             </tr>
           </thead>
           <tbody>
@@ -301,10 +458,14 @@ function RecentOpen() {
               </tr>
             ) : (
               rows.map((r) => (
-                <tr key={r.ncrFormID} className="border-t">
-                  <td className="p-2">{r.ncrFormNo ?? r.ncrFormID}</td>
-                  <td className="p-2">{(r.ncrIssueDate ?? "").slice(0, 10)}</td>
-                  <td className="p-2">{r.ncrStage}</td>
+                <tr key={r.ncrFormID} className="border-t hover:bg-gray-50">
+                  <Td>{r.ncrFormNo ?? r.ncrFormID}</Td>
+                  <Td>
+                    {(r.ncrIssueDate ?? r.createdAt ?? "")
+                      .toString()
+                      .slice(0, 10)}
+                  </Td>
+                  <Td>{r.ncrStage}</Td>
                 </tr>
               ))
             )}
@@ -313,4 +474,11 @@ function RecentOpen() {
       </div>
     </div>
   );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return <th className="p-2 text-left font-medium">{children}</th>;
+}
+function Td({ children }: { children: React.ReactNode }) {
+  return <td className="p-2">{children}</td>;
 }
