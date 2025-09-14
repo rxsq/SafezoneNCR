@@ -1,0 +1,103 @@
+{
+  "startedAt": "2025-09-14T00:33:32.970Z",
+  "API_BASE": "http://localhost:3001",
+  "steps": [
+    {
+      "name": "unauthorized /api/products returns 401",
+      "ok": true,
+      "status": 401,
+      "detail": "status=401"
+    },
+    {
+      "name": "login admin/password",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "cookie": true,
+        "user": "admin"
+      }
+    },
+    {
+      "name": "GET /api/auth/me",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "user": {
+          "empID": 5,
+          "empFirst": "Administrator",
+          "empLast": "",
+          "empEmail": "michael.scott@example.com",
+          "empPhone": "2222222222",
+          "empUsername": "admin",
+          "posID": 5,
+          "createdAt": "2025-09-14T00:28:35.910Z",
+          "updatedAt": "2025-09-14T00:28:35.910Z",
+          "Position": {
+            "posDescription": "Administrator"
+          }
+        }
+      }
+    },
+    {
+      "name": "GET /api/suppliers",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "totalRecords": 2,
+        "currentPage": 1
+      }
+    },
+    {
+      "name": "POST /api/suppliers (create)",
+      "ok": true,
+      "status": 201,
+      "detail": {
+        "supID": 3
+      }
+    },
+    {
+      "name": "POST /api/products (create)",
+      "ok": true,
+      "status": 201,
+      "detail": {
+        "prodID": 3
+      }
+    },
+    {
+      "name": "PUT /api/products/:id (update)",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "prodID": 3,
+        "prodCategory": "QA-Updated"
+      }
+    },
+    {
+      "name": "DELETE /api/products/:id",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "name": "DELETE /api/suppliers/:id",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "name": "GET /api/products?page=1&limit=2",
+      "ok": true,
+      "status": 200,
+      "detail": {
+        "page": 1,
+        "items": 2,
+        "totalPages": 1
+      }
+    }
+  ],
+  "finishedAt": "2025-09-14T00:33:33.261Z"
+}
