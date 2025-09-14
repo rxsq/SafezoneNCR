@@ -12,5 +12,6 @@ router.use('/ncrForms', authMiddleware, require('./ncrForms'));
 router.use('/qualityForms', authMiddleware, require('./qualityForms'));
 router.use('/engineerForms', authMiddleware, require('./engineerForms'));
 router.use('/purchasingForms', authMiddleware, require('./purchasingForms'));
+router.use('/analytics', authMiddleware, require('./analytics'));
 
 module.exports = router;
