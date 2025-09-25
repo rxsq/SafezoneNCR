@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 type NCR = {
@@ -21,17 +23,17 @@ type PageData = {
 };
 
 export default function NcrLogPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // keep last successful data to avoid table jumping between pages while loading
   const lastDataRef = useRef<PageData | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    const fetchPage = async () => {
+    (async () => {
       setLoading(true);
       try {
         const d = await api<PageData>(
@@ -47,8 +49,7 @@ export default function NcrLogPage() {
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
-    };
-    fetchPage();
+    })();
     return () => controller.abort();
   }, [page, limit]);
 
@@ -70,13 +71,16 @@ export default function NcrLogPage() {
         })
       : "";
 
+  // edit URL for a given row
+  const editHref = (id: number) => `/ncr/${id}/edit`; // <-- change if your route differs
+
   return (
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">NCR Log</h1>
 
-        {/* Controls row (compact) */}
+        {/* Controls */}
         <div className="flex items-center gap-2">
           <label className="text-xs text-gray-600">Rows</label>
           <select
@@ -110,7 +114,6 @@ export default function NcrLogPage() {
             </thead>
             <tbody>
               {loading && !view ? (
-                // Initial skeleton while nothing is loaded yet
                 Array.from({ length: limit }).map((_, i) => (
                   <tr key={i} className="border-t">
                     <Td>
@@ -130,13 +133,32 @@ export default function NcrLogPage() {
               ) : view?.items?.length ? (
                 view.items.map((i) => {
                   const open = i.ncrStatusID === 1;
+                  const href = editHref(i.ncrFormID);
+
                   return (
                     <tr
                       key={i.ncrFormID}
-                      className="border-t hover:bg-gray-50/60"
+                      className="border-t hover:bg-gray-50/60 cursor-pointer"
+                      onClick={() => router.push(href)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(href);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      title="Open edit page"
                     >
                       <Td className="whitespace-nowrap">
-                        {i.ncrFormNo ?? i.ncrFormID}
+                        {/* Also provide a direct link for accessibility & right-click */}
+                        <Link
+                          href={href}
+                          className="text-gray-900 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {i.ncrFormNo ?? i.ncrFormID}
+                        </Link>
                       </Td>
                       <Td className="whitespace-nowrap">
                         {toLocalDate(i.ncrIssueDate)}
@@ -216,7 +238,7 @@ function Skeleton({ className = "h-4 w-24" }) {
   return <div className={`animate-pulse rounded bg-gray-100 ${className}`} />;
 }
 
-/** Compact pager similar to employee page: first/prev/next/last + jump */
+/** Compact pager */
 function Pager({
   page,
   totalPages,
