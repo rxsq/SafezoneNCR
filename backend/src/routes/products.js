@@ -79,6 +79,42 @@ r.get("/", c.list);
 
 /**
  * @openapi
+ * /api/products/options:
+ *   get:
+ *     summary: Lightweight list of products for dropdowns (no paging)
+ *     description: Returns an array of products with selected fields, sorted by name. Supports simple filtering.
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: fields
+ *         schema: { type: string, example: "prodID,prodName" }
+ *         description: Comma-separated list of fields to include (defaults to "prodID,prodName")
+ *       - in: query
+ *         name: q
+ *         schema: { type: string }
+ *         description: Case-insensitive substring search on prodName
+ *       - in: query
+ *         name: supID
+ *         schema: { type: integer }
+ *         description: Filter by supplier ID
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, example: 1000 }
+ *         description: Safety cap on returned rows (default 1000, max 5000)
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ */
+r.get("/options", c.options);
+
+/**
+ * @openapi
  * /api/products/{id}:
  *   get:
  *     summary: Get product by ID
