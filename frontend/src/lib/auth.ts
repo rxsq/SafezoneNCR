@@ -10,10 +10,12 @@ export type Me = {
   Position?: { posDescription: string };
 };
 
+type MeResponse = { user: Me };
+
 export async function getMe(): Promise<Me | null> {
   try {
-    const me = await api<Me>("/api/auth/me");
-    return me || null;
+    const res = await api<MeResponse>("/api/auth/me");
+    return res?.user ?? null;
   } catch {
     return null;
   }

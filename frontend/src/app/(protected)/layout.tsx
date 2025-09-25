@@ -36,7 +36,7 @@ export default function ProtectedLayout({
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar />
+      <Sidebar userName={userName} />
       <div className="flex-1 flex flex-col">
         <main className="p-6">{children}</main>
       </div>
