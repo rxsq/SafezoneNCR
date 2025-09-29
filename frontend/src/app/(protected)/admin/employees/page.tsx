@@ -5,7 +5,9 @@ import { api } from "@/lib/api";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Pagination from "@/components/ui/Pagination";
+import { getMe, type Me } from "@/lib/auth";
 import { email, set } from "zod";
+import { useRouter } from "next/navigation";
 
 type Employee = {
   empID: number;
@@ -33,6 +35,7 @@ type Paged<T> =
 const DEFAULT_LIMIT = 10;
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -66,6 +69,26 @@ export default function EmployeesPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [me, setMe] = useState<Me | null>(null);
+  useEffect(() => {
+    (async () => setMe(await getMe()))();
+  }, []);
+  const role = (me?.Position?.posDescription ?? "").toLowerCase();
+
+  useEffect(() => {
+    if (me && !isAdmin()) {
+      router.replace("/");
+    }
+  }, [me]);
+
+  if (!me) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAdmin()) {
+    return null;
+  }
 
   useEffect(() => {
     (async () => {
@@ -228,6 +251,19 @@ export default function EmployeesPage() {
     }
   }
 
+  function formatPhoneNumber(phoneNumberString?: string) {
+    var cleaned = ("" + phoneNumberString).replace(/\D/g, "");
+    var match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return "(" + match[1] + ") " + match[2] + "-" + match[3];
+    }
+    return null;
+  }
+
+  function isAdmin() {
+    return role === "administrator";
+  }
+
   const fullName = (e: Employee) =>
     [e.empFirst, e.empLast].filter(Boolean).join(" ") || "—";
 
@@ -286,7 +322,9 @@ export default function EmployeesPage() {
                   <td className="p-2">{fullName(e)}</td>
                   <td className="p-2">{e.empEmail || "—"}</td>
                   <td className="p-2">{e.empUsername || "—"}</td>
-                  <td className="p-2">{e.empPhone || "—"}</td>
+                  <td className="p-2">
+                    {e.empPhone ? formatPhoneNumber(e.empPhone) || "—" : "—"}
+                  </td>
                   <td className="p-2">{e.posID}</td>
                   <td className="p-2">
                     <div className="flex gap-2">

@@ -18,6 +18,7 @@ import {
   BsChevronDoubleRight,
   BsBoxArrowRight,
 } from "react-icons/bs";
+import { getMe, type Me } from "@/lib/auth";
 
 const sections = [
   {
@@ -63,6 +64,11 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [me, setMe] = useState<Me | null>(null);
+  useEffect(() => {
+    (async () => setMe(await getMe()))();
+  }, []);
+  const role = (me?.Position?.posDescription ?? "").toLowerCase();
 
   useEffect(() => {
     const v = localStorage.getItem("sb.collapsed");
@@ -97,35 +103,44 @@ export function Sidebar({
 
       {/* Nav sections */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {sections.map((sec) => (
-          <div key={sec.title} className="mb-3">
-            {!collapsed && (
-              <div className="px-3 py-1 text-[11px] uppercase tracking-wide text-gray-500">
-                {sec.title}
+        {sections
+          .filter((sec) => {
+            if (sec.title === "Admin" && role !== "administrator") {
+              return false;
+            }
+            return true;
+          })
+          .map((sec) => (
+            <div key={sec.title} className="mb-3">
+              {!collapsed && (
+                <div className="px-3 py-1 text-[11px] uppercase tracking-wide text-gray-500">
+                  {sec.title}
+                </div>
+              )}
+              <div className="space-y-1">
+                {sec.items.map((it) => {
+                  const active =
+                    pathname === it.href || pathname.startsWith(it.href + "/");
+                  return (
+                    <Link
+                      key={it.label}
+                      href={it.href}
+                      className={clsx(
+                        "group flex items-center gap-2 rounded px-3 py-2 text-sm hover:bg-gray-100",
+                        active && "bg-gray-100 font-medium"
+                      )}
+                      title={collapsed ? it.label : undefined}
+                    >
+                      <span className="text-lg">{it.icon}</span>
+                      {!collapsed && (
+                        <span className="truncate">{it.label}</span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
-            )}
-            <div className="space-y-1">
-              {sec.items.map((it) => {
-                const active =
-                  pathname === it.href || pathname.startsWith(it.href + "/");
-                return (
-                  <Link
-                    key={it.label}
-                    href={it.href}
-                    className={clsx(
-                      "group flex items-center gap-2 rounded px-3 py-2 text-sm hover:bg-gray-100",
-                      active && "bg-gray-100 font-medium"
-                    )}
-                    title={collapsed ? it.label : undefined}
-                  >
-                    <span className="text-lg">{it.icon}</span>
-                    {!collapsed && <span className="truncate">{it.label}</span>}
-                  </Link>
-                );
-              })}
             </div>
-          </div>
-        ))}
+          ))}
       </nav>
 
       {/* Footer */}

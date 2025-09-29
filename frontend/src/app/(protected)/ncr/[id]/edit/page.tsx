@@ -7,10 +7,6 @@ import { api } from "@/lib/api";
 import { getMe, type Me } from "@/lib/auth";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
-/* =========================
-   Backend Types (aligned to your API)
-   ========================= */
-
 type Product = { prodID: number; prodName?: string };
 
 type QualityForm = {
@@ -74,10 +70,6 @@ function normalizeStage(s: NCRForm["ncrStage"]): "QUA" | "ENG" | "PUR" | "CLO" {
   return s === "ARC" ? "CLO" : s;
 }
 
-/* =========================
-   Page
-   ========================= */
-
 export default function NcrNewOrEditPage() {
   const router = useRouter();
   const params = useParams<{ id?: string }>();
@@ -94,8 +86,6 @@ export default function NcrNewOrEditPage() {
   const repId = me?.empID ?? undefined;
   const role = (me?.Position?.posDescription ?? "").toLowerCase();
 
-  // ===== Testing bypasses: unlock UI & saving across stages =====
-  const testingBypass = true; // TODO: set false later
   const canEditEngineering = true; // TODO: put real role check later
   const canEditPurchasing = true; // TODO: put real role check later
 
@@ -320,7 +310,6 @@ export default function NcrNewOrEditPage() {
   const [submitting, setSubmitting] = useState(false);
 
   function validateOnSubmit(activeStage: NCRForm["ncrStage"]) {
-    if (testingBypass) return {}; // no gating while you test
     const e: Record<string, string> = {};
 
     if (activeStage === "QUA") {
@@ -375,9 +364,6 @@ export default function NcrNewOrEditPage() {
 
     setSubmitting(true);
     try {
-      /* ========================
-       CREATE FLOW (QUA -> NCR)
-       ======================== */
       if (!editing) {
         const qBody: Partial<QualityForm> = {
           qualItemDesc,
@@ -424,9 +410,6 @@ export default function NcrNewOrEditPage() {
         return;
       }
 
-      /* ========================
-       EDIT FLOW (stage-specific)
-       ======================== */
       // ---- QUA ----
       if (currentStage === "QUA") {
         const qPatch: Partial<QualityForm> = {
@@ -473,10 +456,8 @@ export default function NcrNewOrEditPage() {
             prev ? { ...prev, qualFormID: qNew.qualFormID } : prev
           );
         }
-
-        // (Optional) auto-advance to ENG after Quality save:
-        // await advanceStage("ENG");
-        // return;
+        await advanceStage("ENG");
+        return;
       }
 
       // ---- ENG ----
@@ -514,7 +495,6 @@ export default function NcrNewOrEditPage() {
           );
         }
 
-        // ✅ After Engineering save, advance to Purchasing
         await advanceStage("PUR");
         setErrors({});
         return; // stay on page and let UI show Purchasing
@@ -556,8 +536,7 @@ export default function NcrNewOrEditPage() {
 
         await closeNcr();
 
-        // Done — back to the log (or stay if you prefer)
-        router.replace("/ncr/log");
+        //router.replace("/ncr/log");
         return;
       }
     } catch (err: any) {
@@ -600,16 +579,12 @@ export default function NcrNewOrEditPage() {
     );
   }
 
-  /* =========================
-     Render
-     ========================= */
-
   const headerStage = stageLabel[ncr?.ncrStage ?? "QUA"]; // ARC will show “Closed”
 
   // UI locks (bypassed while testing)
-  const roQuality = editing && currentStage !== "QUA" && !testingBypass;
-  const roEng = currentStage !== "ENG" && !testingBypass;
-  const roPur = currentStage !== "PUR" && !testingBypass;
+  const roQuality = editing && currentStage !== "QUA";
+  const roEng = currentStage !== "ENG";
+  const roPur = currentStage !== "PUR";
 
   return (
     <div className="space-y-4">

@@ -11,8 +11,6 @@ import {
   type Option,
 } from "@/components/ui/SearchableSelect";
 
-/* ---------------- Types (match your backend) ---------------- */
-
 type Product = { prodID: number; prodName?: string; prodCode?: string };
 
 type QualityForm = {
@@ -40,12 +38,8 @@ type NCRForm = {
   ncrStatusID: 1 | 2; // 1=open 2=closed
 };
 
-/* ---------------- Page ---------------- */
-
 export default function NcrNewPage() {
   const router = useRouter();
-
-  /* Auth / Role */
   const [me, setMe] = useState<Me | null>(null);
   useEffect(() => {
     (async () => setMe(await getMe()))();
@@ -83,8 +77,6 @@ export default function NcrNewPage() {
     })();
     return () => controller.abort();
   }, []);
-
-  /* --------- Form state (Quality + NCR bits) --------- */
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [prodID, setProdID] = useState<number | null>(null);
@@ -218,8 +210,6 @@ export default function NcrNewPage() {
       setSubmitting(false);
     }
   };
-
-  /* ---------------- Render ---------------- */
 
   return (
     <div className="space-y-4">
@@ -528,8 +518,6 @@ export default function NcrNewPage() {
     </div>
   );
 }
-
-/* ---------------- Components ---------------- */
 
 function Stepper({
   steps,
