@@ -7,7 +7,8 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Pagination from "@/components/ui/Pagination";
 import { getMe, type Me } from "@/lib/auth";
 import { email, set } from "zod";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 
 type Employee = {
   empID: number;
@@ -78,17 +79,9 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     if (me && !isAdmin()) {
-      router.replace("/");
+      router.replace("/unauthorized");
     }
   }, [me]);
-
-  if (!me) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAdmin()) {
-    return null;
-  }
 
   useEffect(() => {
     (async () => {
@@ -115,6 +108,11 @@ export default function EmployeesPage() {
     })();
   }, [page, limit]);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil((totalRecords || 0) / (limit || 1))),
+    [totalRecords, limit]
+  );
+
   async function reload() {
     try {
       const data = await api<Paged<Employee>>(
@@ -133,6 +131,14 @@ export default function EmployeesPage() {
     } catch (e) {
       console.error("Failed to reload employees", e);
     }
+  }
+
+  if (!me) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAdmin()) {
+    redirect("/forbidden");
   }
 
   function openCreate() {
@@ -266,11 +272,6 @@ export default function EmployeesPage() {
 
   const fullName = (e: Employee) =>
     [e.empFirst, e.empLast].filter(Boolean).join(" ") || "—";
-
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil((totalRecords || 0) / (limit || 1))),
-    [totalRecords, limit]
-  );
 
   return (
     <div className="space-y-4">
